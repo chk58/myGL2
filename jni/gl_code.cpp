@@ -50,10 +50,10 @@ static void printGLString(const char *name, GLenum s) {
     const char *v = (const char *) glGetString(s);
     LOGI("GL %s = %s\n", name, v);
 }
-static const GLfloat light0Position[] = {0.0, 0.0, 2.0, 0.0};
-static const GLfloat light0Ambient[] = {0.4, 0.4, 0.4, 1.0};
-static const GLfloat light0Diffuse[] = {0.7, 0.7, 0.7, 1.0};
-static const GLfloat light0Specular[] = {1.0, 1.0, 1.0, 1.0};
+static const GLfloat light0Position[] = {0.0, -0.0, 2.0, 0.0};
+static const GLfloat light0Ambient[] = {0.2, 0.2, 0.2, 1.0};
+static const GLfloat light0Diffuse[] = {0.5, 0.5, 0.5, 1.0};
+static const GLfloat light0Specular[] = {0.8, 0.8, 0.8, 1.0};
 GLfloat scale = 1.0f;
 
 static void checkGlError(const char* op) {
@@ -68,13 +68,13 @@ bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
 //    printGLString("Vendor", GL_VENDOR);
 //    printGLString("Renderer", GL_RENDERER);
 //    printGLString("Extensions", GL_EXTENSIONS);
-//    glEnable(GL_COLOR_MATERIAL);
-//    glEnable(GL_LIGHTING);
-//    glEnable(GL_LIGHT0);
-//    glLightfv(GL_LIGHT0, GL_POSITION, light0Position);
-//    glLightfv(GL_LIGHT0, GL_AMBIENT, light0Ambient);
-//    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0Diffuse);
-//    glLightfv(GL_LIGHT0, GL_SPECULAR, light0Specular);
+    glEnable(GL_COLOR_MATERIAL);
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glLightfv(GL_LIGHT0, GL_POSITION, light0Position);
+    glLightfv(GL_LIGHT0, GL_AMBIENT, light0Ambient);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, light0Diffuse);
+    glLightfv(GL_LIGHT0, GL_SPECULAR, light0Specular);
 //
 //    LOGI("setupGraphics(%d, %d)", w, h);
 //    gProgram = createProgram(gVertexShader, gFragmentShader);
@@ -88,7 +88,7 @@ bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
 //            gvPositionHandle);
 //
 //	glOrthof(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
-//    glViewport(0, 0, w, h);
+    glViewport(0, h - w, w, w);
     //scale = (GLfloat)w/(GLfloat)h;
     //    checkGlError("glViewport");
 
@@ -97,7 +97,9 @@ bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
     GLvoid* pixel_source = NULL;
 
 	AndroidBitmapInfo *info = (AndroidBitmapInfo *) malloc(sizeof(AndroidBitmapInfo));
-	AndroidBitmap_getInfo(env, bitmap, info);
+	if (AndroidBitmap_getInfo(env, bitmap, info) < 0) {
+		LOGI("AndroidBitmap_getInfo error!");
+	}
     if (info != NULL) {
     	textureWidth = info->width;
     	textureHeight = info->height;
@@ -109,20 +111,23 @@ bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
     LOGI("GL width = %d", textureWidth);
     LOGI("GL height = %d", textureHeight);
 
-	AndroidBitmap_lockPixels(env, bitmap, &pixel_source);
+    if (AndroidBitmap_lockPixels(env, bitmap, &pixel_source) < 0) {
+		LOGI("AndroidBitmap_lockPixels error!");
+    }
 	if (pixel_source != NULL) {
 	    LOGI("not NULL");
 	}
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
-    //glBlendFunc(GL_SRC_COLOR, GL_ZERO);
-    glBlendFunc(GL_ONE, GL_SRC_COLOR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
+    glBlendFunc(GL_ONE, GL_ZERO);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
 
-    glGenTextures(1, &texture[0]);
+    glGenTextures(1, texture);
     checkGlError("glGenTextures");
     glBindTexture(GL_TEXTURE_2D, texture[0]);
     checkGlError("glBindTexture");
@@ -169,11 +174,16 @@ static const GLubyte icosahedronFaces_4[] = {
 		0, 1, 2,
 		2, 1, 3,
 };
-
+static const Vertex3D normals_4[] = {
+ {0.000000, -0.417775, 0.675974},
+ {0.675973, 0.000000, 0.417775},
+ {0.675973, -0.000000, -0.417775},
+ {-0.675973, 0.000000, -0.417775},
+};
 static const GLfloat texCoords[] = {
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		0.0f, 1.0f,
+		0.5f, 1.0f,
+		0.5f, 0.5f,
+		1.0f, 0.5f,
 		1.0f, 1.0f,
     };
 static const Color3D colors_4[] = {
@@ -270,8 +280,8 @@ void renderFrame() {
 //    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0);
 
 	glRotatef(rotation, 0.0, 1.0, 0.0);
-	rotation += 1;
-//    glNormalPointer(GL_FLOAT, 0, normals);
+	rotation += 2;
+    glNormalPointer(GL_FLOAT, 0, normals_4);
 	//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, icosahedronFaces);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, icosahedronFaces_4);
