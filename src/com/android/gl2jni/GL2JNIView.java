@@ -340,14 +340,14 @@ class GL2JNIView extends GLSurfaceView {
 
             Bitmap b = null;
             try {
-                b = BitmapFactory.decodeStream(am.open("aaaaa.bmp"));
+                b = BitmapFactory.decodeStream(am.open("aaaaa.jpg"));
             } catch (IOException e) {
             }
             if (b == null) {
                 throw new RuntimeException("aaaaa.jpg null");
             }
             GL2JNILib.init(width, height, b);
-            // b.recycle();
+            b.recycle();
         }
 
         public void onSurfaceCreated(GL10 gl, EGLConfig config) {

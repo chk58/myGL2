@@ -27,33 +27,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include "data_square.h"
 
 #define  LOG_TAG    "chk"
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
-typedef struct {
-	GLfloat x;
-	GLfloat y;
-	GLfloat z;
-} Vertex3D;
-typedef struct {
-	GLfloat r;
-	GLfloat g;
-	GLfloat b;
-	GLfloat a;
-} Color3D;
 
+
+
+
+static const GLfloat light0Position[] = {0.0, -0.0, 2.0, 0.0};
+static const GLfloat light0Ambient[] = {0.1, 0.1, 0.1, 1.0};
+static const GLfloat light0Diffuse[] = {0.7, 0.7, 0.7, 1.0};
+static const GLfloat light0Specular[] = {0.9, 0.9, 0.9, 1.0};
 
 
 static void printGLString(const char *name, GLenum s) {
     const char *v = (const char *) glGetString(s);
     LOGI("GL %s = %s\n", name, v);
 }
-static const GLfloat light0Position[] = {0.0, -0.0, 2.0, 0.0};
-static const GLfloat light0Ambient[] = {0.2, 0.2, 0.2, 1.0};
-static const GLfloat light0Diffuse[] = {0.5, 0.5, 0.5, 1.0};
-static const GLfloat light0Specular[] = {0.8, 0.8, 0.8, 1.0};
+
 GLfloat scale = 1.0f;
 
 static void checkGlError(const char* op) {
@@ -75,7 +69,7 @@ bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
     glLightfv(GL_LIGHT0, GL_AMBIENT, light0Ambient);
     glLightfv(GL_LIGHT0, GL_DIFFUSE, light0Diffuse);
     glLightfv(GL_LIGHT0, GL_SPECULAR, light0Specular);
-//
+
 //    LOGI("setupGraphics(%d, %d)", w, h);
 //    gProgram = createProgram(gVertexShader, gFragmentShader);
 //    if (!gProgram) {
@@ -86,12 +80,10 @@ bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
 //    checkGlError("glGetAttribLocation");
 //    LOGI("glGetAttribLocation(\"vPosition\") = %d\n",
 //            gvPositionHandle);
-//
+
+
 //	glOrthof(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
     glViewport(0, h - w, w, w);
-    //scale = (GLfloat)w/(GLfloat)h;
-    //    checkGlError("glViewport");
-
     GLuint textureWidth = 0;
     GLuint textureHeight = 0;
     GLvoid* pixel_source = NULL;
@@ -117,14 +109,17 @@ bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
 	if (pixel_source != NULL) {
 	    LOGI("not NULL");
 	}
+	GLubyte *data = (GLubyte *) pixel_source;
+    LOGI("GL data[253] = %d", data[262135]);
+    LOGI("GL data[254] = %d", data[262139]);
+    LOGI("GL data[255] = %d", data[262143]);
+    LOGI("GL data[256] = %d", data[262147]);
+    LOGI("GL data[257] = %d", data[262151]);
 
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ZERO);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
 
 
     glGenTextures(1, texture);
@@ -133,8 +128,8 @@ bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
     checkGlError("glBindTexture");
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixel_source);
     checkGlError("glTexImage2D");
-//    free(pixel_source);
-//    AndroidBitmap_unlockPixels(env, bitmap);
+    free(pixel_source);
+    AndroidBitmap_unlockPixels(env, bitmap);
 
 //    LOGI("GL w = %d", w);
 //    LOGI("GL h = %d", h);
@@ -155,102 +150,9 @@ static inline void makeColor(Color3D *color, GLfloat r, GLfloat g, GLfloat b, GL
 	color->a = a;
 }
 
-//static const Vertex3D vertices[] = {
-//		{-0.2, 0.2, 0.2},
-//		{-0.2, -0.2, 0.2},
-//		{0.2, 0.2, 0.2},
-//		{0.2, -0.2, 0.2},
-//		{-0.2, 0.2, -0.2},
-//		{-0.2, -0.2, -0.2},
-//		{0.2, 0.2, -0.2},
-//		{0.2, -0.2, -0.2}};
-static const Vertex3D vertices_4[] = {
-		{-0.5, 0.5, 0.0},
-		{-0.5, -0.5, 0.0},
-		{0.5, 0.5, 0.0},
-		{0.5, -0.5, 0.0},
-};
-static const GLubyte icosahedronFaces_4[] = {
-		0, 1, 2,
-		2, 1, 3,
-};
-static const Vertex3D normals_4[] = {
- {0.000000, -0.417775, 0.675974},
- {0.675973, 0.000000, 0.417775},
- {0.675973, -0.000000, -0.417775},
- {-0.675973, 0.000000, -0.417775},
-};
-static const GLfloat texCoords[] = {
-		0.5f, 1.0f,
-		0.5f, 0.5f,
-		1.0f, 0.5f,
-		1.0f, 1.0f,
-    };
-static const Color3D colors_4[] = {
-		{ 1.0, 0.0, 0.0, 1.0 },
-		{ 0.0, 1.0, 0.0, 1.0 },
-		{ 0.0, 0.0, 1.0, 1.0 },
-		{ 1.0, 1.0, 0.0, 1.0 },};
-static const Vertex3D vertices[] = {
-		{-0.2, 0.2*scale, 0.2*scale},
-		{-0.2, -0.2*scale, 0.2*scale},
-		{0.2, 0.2*scale, 0.2*scale},
-		{0.2, -0.2*scale, 0.2*scale},
-		{-0.2, 0.2*scale, -0.2*scale},
-		{-0.2, -0.2*scale, -0.2*scale},
-		{0.2, 0.2*scale, -0.2*scale},
-		{0.2, -0.2*scale, -0.2*scale}};
-static const Color3D colors[] = {
-		{ 1.0, 0.0, 0.0, 1.0 },
-		{ 0.0, 1.0, 0.0, 1.0 },
-		{ 0.0, 0.0, 1.0, 1.0 },
-		{ 1.0, 1.0, 0.0, 1.0 },
-		{ 1.0, 0.0, 1.0, 1.0 },
-		{ 0.0, 1.0, 1.0, 1.0 },
-		{ 0.0, 0.0, 0.0, 1.0 },
-		{ 1, 1, 1, 1.0 }};
 
-static const GLubyte icosahedronFaces[] = {
-		0, 1, 2,
-		2, 1, 3,
-		4, 5, 6,
-		6, 5, 7,
-
-		4, 0, 6,
-		6, 0, 2,
-		5, 1, 7,
-		7, 1, 3,
-
-		2, 3, 6,
-		6, 3, 7,
-		4, 5, 0,
-		0, 5, 1};
-
-static const Vertex3D normals[] = {
- {0.000000, -0.417775, 0.675974},
- {0.675973, 0.000000, 0.417775},
- {0.675973, -0.000000, -0.417775},
- {-0.675973, 0.000000, -0.417775},
- {-0.675973, -0.000000, 0.417775},
- {-0.417775, 0.675974, 0.000000},
- {0.417775, 0.675973, -0.000000},
- {0.417775, -0.675974, 0.000000},
-};
 
 void renderFrame() {
-
-//	Vertex3D *vertices = (Vertex3D *) malloc(sizeof(Vertex3D) * 6);
-//	makeVertex(&vertices[0], -0.5, 0.5, 0.0);
-//	makeVertex(&vertices[1], -0.5, -0.5, 0.0);
-//	makeVertex(&vertices[2], 0.5, 0.5, 0.0);
-//	makeVertex(&vertices[3], 0.5, -0.5, 0.0);
-//	makeVertex(&vertices[5], -0.5, -0.5, 0.0);
-
-//	Color3D *colors = (Color3D *) malloc(sizeof(Color3D) * 4);
-//	makeColor(&colors[0], 1.0, 0.0, 0.0, 0.0);
-//	makeColor(&colors[1], 0.0, 1.0, 0.0, 0.0);
-//	makeColor(&colors[2], 0.0, 0.0, 1.0, 0.0);
-//	makeColor(&colors[3], 0.0, 0.0, 0.0, 0.0);
 
 	glLoadIdentity();
 	glClearColor(0.7, 0.7, 0.7, 1.0);
@@ -259,18 +161,13 @@ void renderFrame() {
 	//glEnableClientState(GL_COLOR_ARRAY);
     glEnableClientState(GL_NORMAL_ARRAY);
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	//glOrthof(-100, 100, 100, -100, -1.0, 1.0);
-	//glOrthof(-1.0, 1.0, -1.0, 1.0, 0.01, 1000.0);
-	//glViewport(0, 0, 1280.0, 720.0);
-//	glMatrixMode(GL_PROJECTION);
-	//glFrustumf(-0.5, -0.5, 0.5, 0.5, 1.0, 1000);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	//glColor4f(1.0, 0.0, 0.0, 1.0);
-	//glColorPointer(4, GL_FLOAT, 0, colors);
-	//glVertexPointer(3, GL_FLOAT, 0, vertices);
     glBindTexture(GL_TEXTURE_2D, texture[0]);
-	glVertexPointer(3, GL_FLOAT, 0, vertices_4);
-	glColorPointer(4, GL_FLOAT, 0, colors_4);
+	//glColorPointer(4, GL_FLOAT, 0, colors);
+    glVertexPointer(3, GL_FLOAT, 0, vertices);
+    glNormalPointer(GL_FLOAT, 0, normals);
 	glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
 //	GLfloat ambientAndDiffuse[] = {0.0, 0.1, 0.9, 1.0};
 //	glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, ambientAndDiffuse);
@@ -280,11 +177,9 @@ void renderFrame() {
 //    glMaterialf(GL_FRONT_AND_BACK, GL_SHININESS, 80.0);
 
 	glRotatef(rotation, 0.0, 1.0, 0.0);
-	rotation += 2;
-    glNormalPointer(GL_FLOAT, 0, normals_4);
-	//glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, icosahedronFaces);
+	rotation += 1;
+	glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, icosahedronFaces);
 
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_BYTE, icosahedronFaces_4);
 //	for (int i = 0; i < 10; i++) {
 //		glLoadIdentity();
 //	    glRotatef(rotation, 1.0, 1.0, 1.0);
@@ -292,7 +187,6 @@ void renderFrame() {
 //		glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_BYTE, icosahedronFaces);
 //	}
 
-	//glDrawArrays(GL_TRIANGLE_STRIP, 0, 8);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
     glDisableClientState(GL_NORMAL_ARRAY);
@@ -300,15 +194,7 @@ void renderFrame() {
 
 
 
-//	if (rotation >= 450.0) {
-//		rotation = 90.0;
-//	}
-//	if (vertices != NULL) {
-//		free(vertices);
-//	}
-//	if (colors != NULL) {
-//		free(colors);
-//	}
+
 	/*
 //    static float grey;
 //    grey += 0.01f;
