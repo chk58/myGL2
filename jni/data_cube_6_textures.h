@@ -1,15 +1,5 @@
 
-typedef struct {
-	GLfloat x;
-	GLfloat y;
-	GLfloat z;
-} Vertex3D;
-typedef struct {
-	GLfloat r;
-	GLfloat g;
-	GLfloat b;
-	GLfloat a;
-} Color3D;
+#include "utils.c"
 
 static const Vertex3D vertices[] = {
 		{-0.5, 0.5, 0.5},

@@ -33,10 +33,6 @@
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
 
-
-
-
-
 static const GLfloat light0Position[] = {0.0, -0.0, 2.0, 0.0};
 static const GLfloat light0Ambient[] = {0.1, 0.1, 0.1, 1.0};
 static const GLfloat light0Diffuse[] = {0.7, 0.7, 0.7, 1.0};
@@ -57,6 +53,11 @@ static void checkGlError(const char* op) {
     }
 }
 GLuint texture[1];
+
+static Matrix3D identityMatrix;
+static GLfloat rotation = 0.0;
+
+
 bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
 //    printGLString("Version", GL_VERSION);
 //    printGLString("Vendor", GL_VENDOR);
@@ -131,30 +132,22 @@ bool setupGraphics(JNIEnv * env, int w, int h, jobject bitmap) {
     free(pixel_source);
     AndroidBitmap_unlockPixels(env, bitmap);
 
+
+    identityMatrix[0] = identityMatrix[5] =  identityMatrix[10] = identityMatrix[15] = 1.0;
+    identityMatrix[1] = identityMatrix[2] = identityMatrix[3] = identityMatrix[4] = 0.0;
+    identityMatrix[6] = identityMatrix[7] = identityMatrix[8] = identityMatrix[9] = 0.0;
+    identityMatrix[11] = identityMatrix[12] = identityMatrix[13] = identityMatrix[14] = 0.0;
+
 //    LOGI("GL w = %d", w);
 //    LOGI("GL h = %d", h);
 //    LOGI("GL scale = %f", scale);
     return true;
 }
-static GLfloat rotation = 0.0;
-static inline void makeVertex(Vertex3D *vertex, GLfloat x, GLfloat y, GLfloat z) {
-	vertex->x = x;
-	vertex->y = y;
-	vertex->z = z;
-}
-
-static inline void makeColor(Color3D *color, GLfloat r, GLfloat g, GLfloat b, GLfloat a) {
-	color->r = r;
-	color->g = g;
-	color->b = b;
-	color->a = a;
-}
-
-
 
 void renderFrame() {
 
-	glLoadIdentity();
+	//glLoadIdentity();
+	glLoadMatrixf(identityMatrix);
 	glClearColor(0.7, 0.7, 0.7, 1.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glEnableClientState(GL_VERTEX_ARRAY);
